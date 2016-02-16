@@ -9,12 +9,22 @@
 #include <signal.h>
 
 struct termios saved_tattr;
+int run = 1;
+
+void
+sighandler(int sig)
+{
+  (void)sig;
+  run = 0;
+}
 
 void
 restore_tattr (void)
 {
   if (isatty (STDIN_FILENO))
     tcsetattr (STDIN_FILENO, TCSANOW, &saved_tattr);
+  printf ("\033[?1006l\033[?1004l\033[?1000l");
+  exit(0);
 }
 
 int
@@ -23,7 +33,6 @@ ready_select ()
   struct timeval timeoutstru;
   fd_set readfds;
   int nfds;
-  static int rv = 0;
 
   timeoutstru.tv_sec = 0;
   timeoutstru.tv_usec = 800000;
@@ -38,6 +47,7 @@ ready_select ()
 int
 main (void)
 {
+  signal(SIGINT, sighandler);
   if (isatty (STDIN_FILENO)) {
     struct termios tattr;
     tcgetattr (STDIN_FILENO, &saved_tattr);
@@ -50,14 +60,14 @@ main (void)
     tattr.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
 */
     /* use miminal change for test case: */
-    tattr.c_lflag &= ~(ICANON);
+    tattr.c_lflag &= ~(ECHO|ICANON);
     tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
     atexit (restore_tattr);
   }
   setbuf (stdout, 0);
 
   printf ("\033[?1000h\033[?1006h\033[?1004h");
-  while (1) {
+  while (run) {
     unsigned char c;
     int res;
 
@@ -65,6 +75,7 @@ main (void)
     }
 
     res = read (STDIN_FILENO, & c, 1);
+    if (res < 0) break;
     switch (c & 0xFF) {
       case 0x00 ... 0x1f:  putchar ('^'); putchar (c + 0x40);
                            if (c == '\r') printf ("\r\n");
