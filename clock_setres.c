@@ -20,5 +20,6 @@ main(int argc, char **argv)
   } else {
     pause();
   }
+  return 0;
 }
 	       
