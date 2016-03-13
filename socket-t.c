@@ -22,7 +22,10 @@ main(int ac, char **av)
     count = atoi(av[2]);
   }
   if (setvbuf(stdin, NULL, _IONBF, 0) != 0) {
-    err(1, "setvbuf");
+    err(1, "stdin setvbuf");
+  }
+  if (setvbuf(stdout, NULL, _IONBF, 0) != 0) {
+    err(1, "stdout setvbuf");
   }
   struct termios o, n;
   tcgetattr(0, &o);
