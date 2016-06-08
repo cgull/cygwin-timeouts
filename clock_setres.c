@@ -22,7 +22,7 @@ main(int argc, char **argv)
     fprintf(stderr, "bad resolution value\n");
     exit(1);
   }
-#ifdef __CYGWIN
+#ifdef __CYGWIN__
   clock_setres(CLOCK_REALTIME, &ts);
 #endif
   if (argc > 2) {
